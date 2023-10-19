@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 	"reflect"
-	"runtime"
+	"strconv"
 	"testing"
 	"time"
 	"unsafe"
@@ -45,22 +45,16 @@ func GetSliceMemorySize(slice interface{}) uintptr {
 
 func TestProduct(t *testing.T) {
 	Convey("BloomFilter\n", t, func() {
-		n, errRate := uint(1e9), 0.01
+		n, errRate := uint(1e8), 0.01
 
-		var memStats runtime.MemStats
-		runtime.ReadMemStats(&memStats)
-		t.Logf("Before System memory size: %d M-bytes\n", memStats.Sys>>20)
 		bf := NewBloomFilter(n, errRate)
-
-		runtime.ReadMemStats(&memStats)
-		t.Logf("After1 System memory size: %d M-bytes\n", memStats.Sys>>20)
 
 		m, f := bloom.EstimateParameters(n, errRate)
 		t.Logf("object number = %d", n)
 		t.Logf("errRate = %.2f", errRate)
 		t.Logf("length of bitset = %d", m)
 		t.Logf("hash function number = %d", f)
-		//t.Logf("size of bitset = %d G-Bytes", GetSliceMemorySize(make([]uint64, int64(m)))>>30)
+		t.Logf("size of bitset = %d M-Bytes", GetSliceMemorySize(make([]uint64, int64(m>>6)))>>20)
 
 		file, err := os.Open("../_file/part-00000-2c9152b7-c072-479a-97e0-10c26c90bb38-c000.csv")
 		if err != nil {
@@ -74,13 +68,9 @@ func TestProduct(t *testing.T) {
 		start := time.Now()
 		// 逐行读取文件内容
 		var num int
-		var testObject []string
 		for scanner.Scan() {
 			line := scanner.Text()
 			num += 1
-			if num%100 == 0 {
-				testObject = append(testObject, line)
-			}
 			bf.Add(line)
 		}
 		t.Logf("total object: %d", num)
@@ -112,17 +102,15 @@ func TestProduct(t *testing.T) {
 			t.Errorf("read unexpected number of bytes %d != %d", bytesRead, bytesWritten)
 		}
 
-		// add 的元素一定存在
-		var errNum int
-		for _, o := range testObject {
-			if !g.TestString(o) {
-				errNum += 1
+		var errNumTest int64
+		var testObject int64 = 10000
+		for i := int64(1); i < testObject; i += 1 {
+			if g.TestString("wubingwei " + strconv.FormatInt(i, 10)) {
+				errNumTest += 1
 			}
 		}
-		t.Logf("Test Error Rate: %f, errNum = %d, testObject = %d\n", float64(errNum/len(testObject)), errNum, len(testObject))
+		t.Logf("Test Error Rate: %f, errNum = %d, testObject = %d\n", float64(errNumTest)/float64(testObject), errNumTest, testObject)
 
 		t.Logf("Test wubingwei should not false, actual = %v", g.TestString("wubingwei"))
-		runtime.ReadMemStats(&memStats)
-		t.Logf("After2 System memory size: %d M-bytes\n", memStats.Sys>>20)
 	})
 }
