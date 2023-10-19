@@ -74,13 +74,13 @@ func TestProduct(t *testing.T) {
 		start := time.Now()
 		// 逐行读取文件内容
 		var num int
+		var testObject []string
 		for scanner.Scan() {
 			line := scanner.Text()
 			num += 1
-			// if num%100000 == 0 {
-			// 	t.Log(num)
-			// 	break
-			// }
+			if num%100 == 0 {
+				testObject = append(testObject, line)
+			}
 			bf.Add(line)
 		}
 		t.Logf("total object: %d", num)
@@ -90,17 +90,38 @@ func TestProduct(t *testing.T) {
 		wd, _ := os.Getwd()
 		t.Logf("wd: %s", wd)
 
-		wfile, _ := os.Create("../_file/bloom_filter_binary_file")
-		defer wfile.Close()
-		t.Log("File created:", wfile.Name())
+		wFile, _ := os.Create("../_file/bloom_filter_binary_file")
+		defer wFile.Close()
+		t.Log("File created:", wFile.Name())
 
-		w := bufio.NewWriter(wfile)
+		w := bufio.NewWriter(wFile)
 		bytesWritten, err := bf.BF.WriteTo(w)
 		if err != nil {
 			t.Fatal(err.Error())
 		}
 		t.Logf("bytesWritten = %d M-Bytes", bytesWritten>>20)
 
+		rFile, _ := os.Open("../_file/bloom_filter_binary_file")
+		r := bufio.NewReader(rFile)
+		var g bloom.BloomFilter
+		bytesRead, err := g.ReadFrom(r)
+		if err != nil {
+			t.Fatal(err.Error())
+		}
+		if bytesRead != bytesWritten {
+			t.Errorf("read unexpected number of bytes %d != %d", bytesRead, bytesWritten)
+		}
+
+		// add 的元素一定存在
+		var errNum int
+		for _, o := range testObject {
+			if !g.TestString(o) {
+				errNum += 1
+			}
+		}
+		t.Logf("Test Error Rate: %f, errNum = %d, testObject = %d\n", float64(errNum/len(testObject)), errNum, len(testObject))
+
+		t.Logf("Test wubingwei should not false, actual = %v", g.TestString("wubingwei"))
 		runtime.ReadMemStats(&memStats)
 		t.Logf("After2 System memory size: %d M-bytes\n", memStats.Sys>>20)
 	})
