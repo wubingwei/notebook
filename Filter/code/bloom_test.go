@@ -45,7 +45,7 @@ func GetSliceMemorySize(slice interface{}) uintptr {
 
 func TestProduct(t *testing.T) {
 	Convey("BloomFilter\n", t, func() {
-		n, errRate := uint(1e8), 0.01
+		n, errRate := uint(1e8), 0.001
 
 		bf := NewBloomFilter(n, errRate)
 
