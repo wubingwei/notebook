@@ -29,6 +29,26 @@ func TestBasic(t *testing.T) {
 	})
 }
 
+/*
+goos: darwin
+goarch: arm64
+pkg: github.com/wubingwei/notebook/filter/code
+BenchmarkBloomTest-8   	 4907282	       257.6 ns/op	     126 B/op	       3 allocs/op
+*/
+func BenchmarkBloomTest(b *testing.B) {
+	f := NewBloomFilter(1e8, 0.01)
+	var testObject int64 = 5e7
+	for i := int64(1); i < testObject; i += 1 {
+		f.BF.AddString("wubingwei " + strconv.FormatInt(i, 10))
+	}
+
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		f.BF.Test([]byte("wubingwei " + strconv.FormatInt(int64(i), 10)))
+	}
+}
+
 func GetSliceMemorySize(slice interface{}) uintptr {
 	sliceValue := reflect.ValueOf(slice)
 	if sliceValue.Kind() != reflect.Slice {
@@ -43,9 +63,9 @@ func GetSliceMemorySize(slice interface{}) uintptr {
 	return length*elemSize + headerSize + capacity*elemSize
 }
 
-func TestProduct(t *testing.T) {
+func TestProductionBloom(t *testing.T) {
 	Convey("BloomFilter\n", t, func() {
-		n, errRate := uint(1e8), 0.001
+		n, errRate := uint(1e8), 0.02
 
 		bf := NewBloomFilter(n, errRate)
 
@@ -111,6 +131,6 @@ func TestProduct(t *testing.T) {
 		}
 		t.Logf("Test Error Rate: %f, errNum = %d, testObject = %d\n", float64(errNumTest)/float64(testObject), errNumTest, testObject)
 
-		t.Logf("Test wubingwei should not false, actual = %v", g.TestString("wubingwei"))
+		t.Logf("Test wubingwei should be false, actual = %v", g.TestString("wubingwei"))
 	})
 }
