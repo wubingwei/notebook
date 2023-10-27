@@ -4,7 +4,12 @@ Bloom Filter是一种空间效率很高的随机数据结构，它利用位数�
 布隆过滤器的核心：如果计算出有一个元素已存在，那么它可能存在，如果一个元素不存在，那么它一定不存在
 
 ## 主要作用
-
+布隆过滤器已经被用来：
+- 减少概率路由表中所需的空间；
+- 加速最长前缀匹配的IP地址；
+- 改进网络状态管理和监控；
+- 在数据包中编码多播转发信息；
+  
 ## 结构
 ![image](resource/bloom-filter-structure.jpg)
 
@@ -38,3 +43,19 @@ func EstimateParameters(n uint, p float64) (m uint, k uint) {
 
 
 ## 测试
+```GO
+BloomFilter
+
+bloom_test.go:53: object number = 1000000000
+bloom_test.go:54: errRate = 0.01
+bloom_test.go:55: length of bitset = 958505838
+bloom_test.go:56: hash function number = 7
+bloom_test.go:57: size of bitset = 457 M-Bytes
+bloom_test.go:76: total object: 89142232
+bloom_test.go:78: load elapsed = 25.194008 s
+bloom_test.go:81: wd: /Users/David/Golang/src/github.com/wubingwei/notebook/Filter/code
+bloom_test.go:85: File created: ../_file/bloom_filter_binary_file
+bloom_test.go:92: bytesWritten = 114 M-Bytes
+bloom_test.go:112: Test Error Rate: 0.008600, errNum = 86, testObject = 10000
+bloom_test.go:114: Test wubingwei should be false, actual = false
+```
