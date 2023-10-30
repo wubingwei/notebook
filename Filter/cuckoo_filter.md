@@ -10,6 +10,12 @@
 - 在许多实际应用中，如果目标假阳性率ε小于3%，则它使用的空间小于布隆过滤器。
 
 ## 结构
+```GO
+fliter 结构定义 [][4]byte
+其中 byte 表示的是数据的指纹，定义为 fingerprint
+每个数据有两个 buckt 的 index1 and index2。
+首先插入index1 的 bucket，在 [4]byte 按顺序循环找到 空位，如没有，插入index1 的 bucket，依旧在 [4]byte 按顺序循环找到 空位。
+```
 
 
 ## 开源实现
