@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"reflect"
+	"runtime"
 	"strconv"
 	"testing"
 	"time"
@@ -122,15 +123,21 @@ func TestProductionBloom(t *testing.T) {
 			t.Errorf("read unexpected number of bytes %d != %d", bytesRead, bytesWritten)
 		}
 
+		start = time.Now()
+
 		var errNumTest int64
-		var testObject int64 = 10000
+		var testObject int64 = 100000
 		for i := int64(1); i < testObject; i += 1 {
 			if g.TestString("wubingwei " + strconv.FormatInt(i, 10)) {
 				errNumTest += 1
 			}
 		}
-		t.Logf("Test Error Rate: %f, errNum = %d, testObject = %d\n", float64(errNumTest)/float64(testObject), errNumTest, testObject)
+		t.Logf("Test Error Rate: %f, errNum = %d, testObject = %d\n, usedTime = %d us", float64(errNumTest)/float64(testObject), errNumTest, testObject, time.Since(start).Microseconds())
 
 		t.Logf("Test wubingwei should be false, actual = %v", g.TestString("wubingwei"))
+
+		start = time.Now()
+		runtime.GC()
+		t.Logf("GC used %d ms", time.Since(start).Milliseconds())
 	})
 }

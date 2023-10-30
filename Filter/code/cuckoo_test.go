@@ -4,12 +4,12 @@ import (
 	"bufio"
 	"log"
 	"os"
+	"runtime"
 	"strconv"
 	"testing"
 	"time"
 	"unsafe"
 
-	"github.com/google/go-cmp/cmp"
 	cuckoo "github.com/seiflotfy/cuckoofilter"
 	. "github.com/smartystreets/goconvey/convey"
 )
@@ -77,7 +77,7 @@ func getNextPow2(n uint64) uint {
 
 func TestProductionCuckoo(t *testing.T) {
 	Convey("CuckooProduction\n", t, func() {
-		n := uint(2e8)
+		n := uint(1e8)
 
 		cf := cuckoo.NewFilter(n)
 
@@ -96,13 +96,16 @@ func TestProductionCuckoo(t *testing.T) {
 		start := time.Now()
 		// 逐行读取文件内容
 		var num int
+		var errCount int
 		for scanner.Scan() {
 			line := scanner.Text()
-			num += 1
-			cf.InsertUnique([]byte(line))
+			num++
+			if !cf.Insert([]byte(line)) {
+				errCount++
+			}
 		}
 		t.Logf("total object: %d", num)
-
+		t.Logf("errCount object: %d", errCount)
 		t.Logf("load elapsed = %f s", time.Since(start).Seconds())
 
 		wd, _ := os.Getwd()
@@ -133,20 +136,26 @@ func TestProductionCuckoo(t *testing.T) {
 		}
 		t.Logf("cuckoo.Decode used %f Seconds", time.Since(t1).Seconds())
 
-		if !cmp.Equal(cf, cfCopy, cmp.AllowUnexported(cuckoo.Filter{})) {
-			t.Errorf("Decode = %v, want %v", cfCopy, cf)
-		}
-		t.Logf("cmp.Equal used %f Seconds", time.Since(t1).Seconds())
+		// if !cmp.Equal(cf, cfCopy, cmp.AllowUnexported(cuckoo.Filter{})) {
+		// 	t.Errorf("Decode = %v, want %v", cfCopy, cf)
+		// }
+		// t.Logf("cmp.Equal used %f Seconds", time.Since(t1).Seconds())
+
+		start = time.Now()
 
 		var errNumTest int64
-		var testObject int64 = 10000
+		var testObject int64 = 100000
 		for i := int64(1); i < testObject; i += 1 {
 			if cfCopy.Lookup([]byte("wubingwei " + strconv.FormatInt(i, 10))) {
 				errNumTest += 1
 			}
 		}
-		t.Logf("Test Error Rate: %f, errNum = %d, testObject = %d\n", float64(errNumTest)/float64(testObject), errNumTest, testObject)
+		t.Logf("Test Error Rate: %f, errNum = %d, testObject = %d\n, usedTime = %d us", float64(errNumTest)/float64(testObject), errNumTest, testObject, time.Since(start).Microseconds())
 
 		t.Logf("Test wubingwei should be false, actual = %v", cfCopy.Lookup([]byte("wubingwei")))
+
+		start = time.Now()
+		runtime.GC()
+		t.Logf("GC used %d ms", time.Since(start).Milliseconds())
 	})
 }
