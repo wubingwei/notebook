@@ -66,7 +66,7 @@ func GetSliceMemorySize(slice interface{}) uintptr {
 
 func TestProductionBloom(t *testing.T) {
 	Convey("BloomFilter\n", t, func() {
-		n, errRate := uint(1e8), 0.02
+		n, errRate := uint(1e8), 0.01
 
 		bf := NewBloomFilter(n, errRate)
 
@@ -92,6 +92,9 @@ func TestProductionBloom(t *testing.T) {
 		for scanner.Scan() {
 			line := scanner.Text()
 			num += 1
+			if num >= int(n) {
+				break
+			}
 			bf.Add(line)
 		}
 		t.Logf("total object: %d", num)

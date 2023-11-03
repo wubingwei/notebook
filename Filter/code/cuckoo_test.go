@@ -77,7 +77,7 @@ func getNextPow2(n uint64) uint {
 
 func TestProductionCuckoo(t *testing.T) {
 	Convey("CuckooProduction\n", t, func() {
-		n := uint(1e8)
+		n := uint(1e7)
 
 		cf := cuckoo.NewFilter(n)
 
@@ -100,6 +100,9 @@ func TestProductionCuckoo(t *testing.T) {
 		for scanner.Scan() {
 			line := scanner.Text()
 			num++
+			if num >= 1e8 {
+				break
+			}
 			if !cf.Insert([]byte(line)) {
 				errCount++
 			}
