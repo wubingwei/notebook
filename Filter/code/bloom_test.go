@@ -66,7 +66,7 @@ func GetSliceMemorySize(slice interface{}) uintptr {
 
 func TestProductionBloom(t *testing.T) {
 	Convey("BloomFilter\n", t, func() {
-		n, errRate := uint(1e8), 0.01
+		n, errRate := uint(10000), 0.01
 
 		bf := NewBloomFilter(n, errRate)
 
@@ -77,7 +77,7 @@ func TestProductionBloom(t *testing.T) {
 		t.Logf("hash function number = %d", f)
 		t.Logf("size of bitset = %d M-Bytes", GetSliceMemorySize(make([]uint64, int64(m>>6)))>>20)
 
-		file, err := os.Open("../_file/part-00000-2c9152b7-c072-479a-97e0-10c26c90bb38-c000.csv")
+		file, err := os.Open("../_file/test.csv")
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -135,6 +135,9 @@ func TestProductionBloom(t *testing.T) {
 				errNumTest += 1
 			}
 		}
+		t.Logf("Test True: %s, actual: %v", "103a5d8a882bfed1742653bb2eea81bc,com.inletfilter.test,rewarded_video", g.TestString("103a5d8a882bfed1742653bb2eea81bc,com.inletfilter.test,rewarded_video"))
+		t.Logf("Test True: %s, actual: %v", "e73bc49a8e8dccf488301863b3c0364e", g.TestString("e73bc49a8e8dccf488301863b3c0364e"))
+
 		t.Logf("Test Error Rate: %f, errNum = %d, testObject = %d\n, usedTime = %d us", float64(errNumTest)/float64(testObject), errNumTest, testObject, time.Since(start).Microseconds())
 
 		t.Logf("Test wubingwei should be false, actual = %v", g.TestString("wubingwei"))
